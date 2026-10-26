@@ -10,6 +10,21 @@ pip install -r requirements.txt
 <!-- Checking if all the requirements have been installed -->
 pip list
 
+
+## Git
+
+echo "# cold-chain-logistics-FDE-Project" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/Romona94/cold-chain-logistics-FDE-Project.git
+git push -u origin main
+
+git branch -M main
+git branch
+
+
 ## Requirement.txt
 AI / LLM
 openai
@@ -39,7 +54,7 @@ torch
 
 SQL 数据库
 SQLAlchemy
-pyodbc
+pymssql
 
 文档处理
 pypdf

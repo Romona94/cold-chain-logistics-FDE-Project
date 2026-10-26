@@ -1,8 +1,7 @@
 from pathlib import Path
 import pandas as pd
-import urllib
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from dotenv import load_dotenv
 
 # __file__ is 'experiment/phase-0/ingest_legacy_data.py'
@@ -41,22 +40,18 @@ df_legacy = df[list(legacy_mapping.keys())].rename(columns=legacy_mapping)
 # Add a fake ingestion flag to make it look like an automated legacy system
 df_legacy['SYS_INGEST_FLAG'] = 'Y'
 
-# 3. Connect to Docker MSSQL Server
+# 3. Connect to Podman MSSQL Server
 print("Connecting to legacy MSSQL Database...")
-# Use the pyodbc driver. (Ensure you have ODBC Driver 17 or 18 for SQL Server installed on your OS)
-connection_string = (
-        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-        f"SERVER={db_host},{db_port};"
-        f"DATABASE=master;"
-        f"UID={db_user};"
-        f"PWD={db_password};"
-        f"Encrypt=no;"
-        f"TrustServerCertificate=yes;"
+engine = create_engine(
+    URL.create(
+        "mssql+pymssql",
+        username=db_user,
+        password=db_password,
+        host=db_host,
+        port=int(db_port),
+        database="master",
     )
-
-params = urllib.parse.quote_plus(connection_string)
-
-engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
+)
 
 # 4. Ingest data into the messy table name
 table_name = 'TBL_SC_FLEET_HIST_RAW'
