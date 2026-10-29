@@ -1,38 +1,26 @@
 # Local SQL Server
 
-The local database runs in Podman as `legacy-mssql`, using SQL Server 2022 Developer Edition and a persistent Podman volume named `legacy-mssql-data`.
+Two SQL Server 2022 Developer Edition instances run in Podman. This Apple Silicon host runs the x86-64 images under emulation; the instances are for local development, not production.
 
-This host is Apple Silicon, so the x86-64 SQL Server image runs under emulation. It has been verified with an authenticated SQL query, but this setup is for local development only; use a supported x86-64 host for production.
+## Connection information
 
-## Connection environment
+| Container | Host | Port | Database | User | Private environment file | Data volume |
+| --- | --- | ---: | --- | --- | --- | --- |
+| `legacy-mssql` | `127.0.0.1` | `1433` | `master` | `sa` | `~/.config/legacy-mssql/sa.env` | `legacy-mssql-data` |
+| `cloud-legacy-mssql` | `127.0.0.1` | `1434` | `master` | `sa` | `~/.config/legacy-mssql/cloud.env` | `cloud-legacy-mssql-data` |
 
-```dotenv
-SQL_SERVER_HOST=127.0.0.1
-SQL_SERVER_PORT=1433
-SQL_SERVER_DATABASE=master
-SQL_SERVER_USER=sa
-SQL_SERVER_PASSWORD=<local secret>
-SQL_SERVER_ENCRYPT=true
-SQL_SERVER_TRUST_SERVER_CERTIFICATE=true
-```
+Each private environment file contains its instance's `SQL_SERVER_HOST`, `SQL_SERVER_PORT`, `SQL_SERVER_DATABASE`, `SQL_SERVER_USER`, and `SQL_SERVER_PASSWORD` settings, plus the container startup settings. Both files are owner-only; load the appropriate file with your application's environment-file support. Do not commit or share them.
 
-The private environment file at `~/.config/legacy-mssql/sa.env` contains these `SQL_SERVER_*` values and the container settings. Load it with your application's environment-file support; do not commit or share it. `.env.example` contains the non-secret connection settings.
-
-For clients that use a connection string, enable encryption and trust the local self-signed certificate, for example:
-
-```text
-Server=127.0.0.1,1433;Database=master;User Id=sa;Password=<local secret>;Encrypt=True;TrustServerCertificate=True
-```
+For a client using ADO.NET, the connection string format is `Server=127.0.0.1,<port>;Database=master;User Id=sa;Password=<secret>;Encrypt=True;TrustServerCertificate=True`, substituting `1433` or `1434` and the password from the matching private environment file.
 
 ## Start and stop
 
 ```sh
 podman machine start
-podman start legacy-mssql
-podman logs -f legacy-mssql
+podman start legacy-mssql cloud-legacy-mssql
 ```
 
-Stop the container with `podman stop legacy-mssql`. The database files remain in `legacy-mssql-data` when the container is stopped or removed.
+Stop both containers with `podman stop legacy-mssql cloud-legacy-mssql`. Their database files remain in their respective named volumes.
 
 ## Source data
 
